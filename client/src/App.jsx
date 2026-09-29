@@ -1,164 +1,236 @@
+import { useEffect, useState } from 'react';
 import Header from './components/Header.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import StatCard from './components/StatCard.jsx';
 import TaskCard from './components/TaskCard.jsx';
-import { tasks } from './data/tasks.js';
+import TaskForm from './components/TaskForm.jsx';
+import TaskToolbar from './components/TaskToolbar.jsx';
+import { initialTasks } from './data/tasks.js';
+
+const STORAGE_KEY = 'taskflow.tasks';
+
+function loadTasks() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+
+  if (!saved) {
+    return initialTasks;
+  }
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return initialTasks;
+  }
+}
 
 export default function App() {
+  const [tasks, setTasks] = useState(loadTasks);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Все');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(tasks)
+    );
+  }, [tasks]);
+
+  const filteredTasks = tasks.filter((task) => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    const matchesSearch =
+      task.title.toLowerCase().includes(normalizedSearch) ||
+      task.project.toLowerCase().includes(normalizedSearch);
+
+    const matchesStatus =
+      statusFilter === 'Все' ||
+      task.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalCount = tasks.length;
+  const progressCount = tasks.filter(
+    (task) => task.status === 'В работе'
+  ).length;
+  const doneCount = tasks.filter(
+    (task) => task.status === 'Готово'
+  ).length;
+  const projectCount = new Set(
+    tasks.map((task) => task.project)
+  ).size;
+
+  function openCreateForm() {
+    setEditingTask(null);
+    setIsFormOpen(true);
+  }
+
+  function openEditForm(task) {
+    setEditingTask(task);
+    setIsFormOpen(true);
+  }
+
+  function closeForm() {
+    setEditingTask(null);
+    setIsFormOpen(false);
+  }
+
+  function handleSaveTask(taskData) {
+    if (editingTask) {
+      setTasks((currentTasks) =>
+        currentTasks.map((task) =>
+          task.id === editingTask.id
+          ? { ...task, ...taskData }
+          : task
+        )
+      );
+      closeForm();
+      return;
+    }
+
+    const newTask = {
+      id: crypto.randomUUID(),
+      ...taskData,
+    };
+
+    setTasks((currentTasks) => [
+      newTask,
+      ...currentTasks,
+    ]);
+    closeForm();
+  }
+
+  function handleDeleteTask(taskId) {
+    const confirmed = window.confirm(
+      'Удалить эту задачу?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+    setTasks((currentTasks) =>
+      currentTasks.filter((task) => task.id !== taskId)
+    );
+  }
+
+  function handleStatusChange(taskId, status) {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId
+        ? { ...task, status }
+        : task
+      )
+    );
+  }
+
+  function resetFilters() {
+    setSearch('');
+    setStatusFilter('Все');
+  }
+
+  function resetTasks() {
+    const confirmed = window.confirm(
+      'Вернуть исходные учебные задачи?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+    setTasks(initialTasks);
+    resetFilters();
+  }
+
   return (
     <div className="appShell">
       <Sidebar />
 
       <main className="content">
-        <Header />
+        <Header onCreateTask={openCreateForm} />
 
-        <section className="statsGrid" aria-label="Статистика">
-          <StatCard label="Всего задач" value="12" note="+3 за эту неделю" />
-          <StatCard label="В работе" value="4" note="Нужны сегодня" />
-          <StatCard label="Готово" value="6" note="Хороший темп" />
-          <StatCard label="Проектов" value="3" note="Учёба и портфолио" />
-          <StatCard label="Просрочено" value="1" note="Не сдавайтесь" />
+        <section
+          className="statsGrid"
+          aria-label="Статистика"
+        >
+          <StatCard
+            label="Всего задач"
+            value={totalCount}
+            note="Все текущие задачи"
+          />
+          <StatCard
+            label="В работе"
+            value={progressCount}
+            note="Активные задачи"
+          />
+          <StatCard
+            label="Готово"
+            value={doneCount}
+            note="Завершенные задачи"
+          />
+          <StatCard
+            label="Проектов"
+            value={projectCount}
+            note="Уникальные проекты"
+          />
         </section>
 
         <section className="panel">
           <div className="sectionHeading">
             <div>
               <p className="eyebrow">Фокус</p>
-              <h2>Ближайшие задачи</h2>
+              <h2>Задачи</h2>
             </div>
-            <button className="ghostButton" type="button">Показать все</button>
+
+            <button
+              className="ghostButton"
+              type="button"
+              onClick={resetTasks}
+              >
+              Исходные задачи
+            </button>
           </div>
+
+          <TaskToolbar
+            search={search}
+            statusFilter={statusFilter}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            onResetFilters={resetFilters}
+          />
+          <div className="resultLine">
+            Найдено задач: {filteredTasks.length}
+          </div>
+
           <div className="taskList">
-            {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
-            ))}
+            {filteredTasks.length > 0 ? (
+              filteredTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onEdit={openEditForm}
+                  onDelete={handleDeleteTask}
+                  onStatusChange={handleStatusChange}
+                />
+              ))
+            ) : (
+            <div className="emptyState">
+              <strong>Задачи не найдены</strong>
+              <span>
+                Измените запрос или сбросьте фильтры.
+              </span>
+            </div>
+            )}
           </div>
         </section>
       </main>
+
+      {isFormOpen && (
+        <TaskForm
+          task={editingTask}
+          onSave={handleSaveTask}
+          onCancel={closeForm}
+        />
+      )}
     </div>
   );
 }
-
-
-// import { useState } from 'react'
-// import heroImg from './assets/hero.png'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from './assets/vite.svg'
-// import './App.css'
-
-// function App() {
-//   const [count, setCount] = useState(0)
-
-//   return (
-//     <>
-//       <section id="center">
-//         <div className="hero">
-//           <img src={heroImg} className="base" width="170" height="179" alt="" />
-//           <img src={reactLogo} className="framework" alt="React logo" />
-//           <img src={viteLogo} className="vite" alt="Vite logo" />
-//         </div>
-//         <div>
-//           <h1>Get started</h1>
-//           <p>
-//             Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-//           </p>
-//         </div>
-//         <button
-//           type="button"
-//           className="counter"
-//           onClick={() => setCount((count) => count + 1)}
-//         >
-//           Count is {count}
-//         </button>
-//       </section>
-
-//       <div className="ticks"></div>
-
-//       <section id="next-steps">
-//         <div id="docs">
-//           <svg className="icon" role="presentation" aria-hidden="true">
-//             <use href="/icons.svg#documentation-icon"></use>
-//           </svg>
-//           <h2>Documentation</h2>
-//           <p>Your questions, answered</p>
-//           <ul>
-//             <li>
-//               <a href="https://vite.dev/" target="_blank">
-//                 <img className="logo" src={viteLogo} alt="" />
-//                 Explore Vite
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://react.dev/" target="_blank">
-//                 <img className="button-icon" src={reactLogo} alt="" />
-//                 Learn more
-//               </a>
-//             </li>
-//           </ul>
-//         </div>
-//         <div id="social">
-//           <svg className="icon" role="presentation" aria-hidden="true">
-//             <use href="/icons.svg#social-icon"></use>
-//           </svg>
-//           <h2>Connect with us</h2>
-//           <p>Join the Vite community</p>
-//           <ul>
-//             <li>
-//               <a href="https://github.com/vitejs/vite" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#github-icon"></use>
-//                 </svg>
-//                 GitHub
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://chat.vite.dev/" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#discord-icon"></use>
-//                 </svg>
-//                 Discord
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://x.com/vite_js" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#x-icon"></use>
-//                 </svg>
-//                 X.com
-//               </a>
-//             </li>
-//             <li>
-//               <a href="https://bsky.app/profile/vite.dev" target="_blank">
-//                 <svg
-//                   className="button-icon"
-//                   role="presentation"
-//                   aria-hidden="true"
-//                 >
-//                   <use href="/icons.svg#bluesky-icon"></use>
-//                 </svg>
-//                 Bluesky
-//               </a>
-//             </li>
-//           </ul>
-//         </div>
-//       </section>
-
-//       <div className="ticks"></div>
-//       <section id="spacer"></section>
-//     </>
-//   )
-// }
-
-// export default App
