@@ -72,3 +72,38 @@ GET {{baseUrl}}/api/tasks/00000000-0000-4000-8000-000000000000
 
 ### Ошибка 404: неизвестный endpoint
 GET {{baseUrl}}/api/unknown
+
+### Фильтр по проекту
+GET {{baseUrl}}/api/tasks?project=TaskFlow
+
+### Создать задачу с description
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Написать самостоятельную часть",
+  "project": "TaskFlow",
+  "status": "В работе",
+  "priority": "Высокий",
+  "dueDate": "2026-10-15",
+  "description": "Добавить description, project-фильтр и проверку даты"
+}
+
+### Изменить description и dueDate через PATCH
+PATCH {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "description": "Обновлённое описание задачи",
+  "dueDate": "2026-12-31"
+}
+
+### Ошибка 400: неправильный формат dueDate
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Задача с плохой датой",
+  "project": "TaskFlow",
+  "dueDate": "31-12-2026"
+}
