@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3000 
 @taskId = 11111111-1111-4111-8111-111111111111 
-@deleteTaskId = 33333333-3333-4333-8333-333333333333 
+@deleteTaskId = 22222222-2222-4222-8222-222222222222 
   
 ### Проверка сервера и PostgreSQL 
 GET {{baseUrl}}/api/health 
@@ -11,7 +11,6 @@ GET {{baseUrl}}/api/tasks
 ### Фильтр по статусу 
 GET {{baseUrl}}/api/tasks?status=Готово 
   
- 
 ### Фильтр по приоритету 
 GET {{baseUrl}}/api/tasks?priority=Высокий 
   
@@ -62,3 +61,40 @@ GET {{baseUrl}}/api/tasks/00000000-0000-4000-8000-000000000000
   
 ### Ошибка 404: неизвестный endpoint 
 GET {{baseUrl}}/api/unknown 
+
+### Фильтр по проекту
+GET {{baseUrl}}/api/tasks?project=TaskFlow
+
+### Статистика по задачам
+GET {{baseUrl}}/api/stats
+
+### Создать задачу с description
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Написать самостоятельную часть",
+  "project": "TaskFlow",
+  "status": "В работе",
+  "priority": "Высокий",
+  "dueDate": "2026-10-15",
+  "description": "Добавить description, project-фильтр и /api/stats"
+}
+
+### Изменить description через PATCH
+PATCH {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "description": "Обновлённое описание после PATCH"
+}
+
+### Ошибка 400: description не строка
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Задача с плохим description",
+  "project": "TaskFlow",
+  "description": 123
+}
