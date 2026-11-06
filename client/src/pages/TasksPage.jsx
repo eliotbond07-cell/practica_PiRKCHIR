@@ -11,11 +11,13 @@ export default function TasksPage({
   error, 
   search, 
   statusFilter, 
+  priorityFilter,
   isFormOpen, 
   editingTask, 
   onRetry, 
   onSearchChange, 
   onStatusFilterChange, 
+  onPriorityFilterChange,
   onResetFilters, 
   onCreateTask, 
   onEditTask, 
@@ -41,14 +43,25 @@ export default function TasksPage({
           <div> 
             <p className="eyebrow">Задачи</p> 
             <h2>Все задачи</h2> 
-          </div> 
+          </div>
+
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={onRetry}
+            disabled={loading}
+            >
+            {loading ? 'Обновление…' : 'Обновить'}
+          </button> 
         </div> 
   
         <TaskToolbar 
           search={search} 
           statusFilter={statusFilter} 
+          priorityFilter={priorityFilter}
           onSearchChange={onSearchChange} 
           onStatusFilterChange={onStatusFilterChange} 
+          onPriorityFilterChange={onPriorityFilterChange}
           onResetFilters={onResetFilters} 
         /> 
   
