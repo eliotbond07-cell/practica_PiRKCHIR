@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'; 
+
 function getStatusClass(status) {
     if (status === 'Готово') return 'status done';
     if (status === 'В работе') return 'status progress';
@@ -45,7 +47,7 @@ return (
                 )}
 
                 {task.status !== 'Готово' && (
-                    <button
+                <button
                     type="button"
                     onClick={() => onStatusChange(task.id, 'Готово')}
                     >
@@ -53,12 +55,21 @@ return (
                 </button>
                 )}
 
-                <button
-                    type="button"
-                    onClick={() => onEdit(task)}
-                    >
-                    Изменить
-                </button>
+                <Link 
+                    className="taskActionLink" 
+                    to={`/tasks/${task.id}`} 
+                    > 
+                    Открыть 
+                </Link> 
+
+                {onEdit && ( 
+                <button 
+                        type="button" 
+                        onClick={() => onEdit(task)} 
+                    > 
+                        Изменить 
+                </button> 
+                )}
 
                 <button
                     className="dangerAction"
