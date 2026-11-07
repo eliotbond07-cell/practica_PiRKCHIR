@@ -698,3 +698,18 @@ toolbar {
     grid-template-columns: 1fr; 
   } 
 }
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.checkboxField input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}

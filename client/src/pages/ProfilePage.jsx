@@ -8,23 +8,23 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState(''); 
   
-  useEffect(() => { 
-    async function loadProfile() { 
-      setLoading(true); 
-      setError(''); 
-  
-      try { 
-        const data = await getCurrentUser(); 
-        setProfile(data); 
-      } catch (requestError) { 
-        setError(requestError.message); 
-      } finally { 
-        setLoading(false); 
-      } 
-    } 
-  
-    loadProfile(); 
-  }, []); 
+  async function loadProfile() {
+    setLoading(true);
+    setError('');
+
+    try {
+        const data = await getCurrentUser();
+        setProfile(data);
+    } catch (requestError) {
+        setError(requestError.message);
+    } finally {
+        setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
   
   if (loading) { 
     return <LoadingState />; 
@@ -44,7 +44,16 @@ export default function ProfilePage() {
     <section className="profileCard"> 
       <p className="eyebrow">Личный кабинет</p> 
       <h1>{profile.name}</h1> 
-  
+
+      <button
+        type="button"
+        className="ghostButton"
+        onClick={loadProfile}
+        disabled={loading}
+        >
+        {loading ? 'Обновление…' : 'Обновить данные'}
+      </button>
+
       <dl className="profileGrid"> 
         <div> 
           <dt>Email</dt> 
