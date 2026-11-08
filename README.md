@@ -106,6 +106,10 @@ API: `http://localhost:3000`
 cd server 
 npm test 
 ``` 
+
+##### Дополнительный тест
+
+В `server/src/tests/api.test.js` добавлен тест `неизвестный API endpoint возвращает 404 с сообщением`.
   
 ## Тесты клиента 
   
