@@ -104,8 +104,8 @@ POST http://localhost:3000/api/auth/register
 Content-Type: application/json 
   
 {
-  "name": "Алексей", 
-  "email": "alexey@example.com", 
+  "name": "Олег", 
+  "email": "oleg@example.com", 
   "password": "password123" 
 } 
   
@@ -117,3 +117,15 @@ GET http://localhost:3000/api/tasks
   
 ### Выход 
 POST http://localhost:3000/api/auth/logout 
+
+### Неверный статус 
+POST http://localhost:3000/api/tasks 
+Content-Type: application/json 
+  
+{ 
+  "title": "Проверить финальную версию", 
+  "project": "TaskFlow", 
+  "status": "Когда-нибудь", 
+  "priority": "Высокий", 
+  "dueDate": "2026-10-01" 
+}
